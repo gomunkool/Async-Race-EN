@@ -50,3 +50,30 @@
     font-size: 24px;
     margin: 0 20px 0 0;
 }
+
+.pagination_count {
+    color: #edf5e1;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 800px;
+    margin: 15px auto;
+}
+
+.pagination__button {
+    background-color: #05386b;
+    color: #edf5e1;
+    font-size: 24px;
+    transition: 0.3s;
+}
+
+.pagination__button:hover {
+    background-color: #05386b;
+    color: #379653;
+    font-size: 24px;
+}
+
+.garage__race_count {
+    padding: 0 20px;
+}

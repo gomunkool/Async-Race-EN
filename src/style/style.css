@@ -92,16 +92,22 @@ h6 {
 .app {
     display: flex;
     flex-direction: column;
-    height: 95vh;
+    height: 100vh;
 }
 
-h1, h2, p, a {
+h1, h2, p {
     color: #8ee4af;
     text-align: center;
     padding: 20px 0;
     font-size: 32px
 }
 
+a {
+    font-size: 14px;
+    color: #8ee4af;
+    text-align: center;
+    padding: 20px 0;
+}
 
 .header__button-count {
     display: flex;

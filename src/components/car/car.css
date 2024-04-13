@@ -1,0 +1,37 @@
+.car_count {
+    margin: 0 0 20px 0;
+}
+
+.car__buttons_count {
+    display: flex;
+    align-items: center;
+    margin: 0 0 10px 0;
+}
+
+.car__button {
+    width: 100px;
+    height: 30px;
+    background-color: #379653;
+    border: #379683 3px solid;
+    border-radius: 15px;
+    color: #edf5e1;
+    font-size: 14px;
+    margin: 0 20px 0 0;
+    transition: 0.3s all;
+}
+
+.car__button:hover {
+    background-color: #edf5e1;
+    color: #379653;
+}
+
+.car__title {
+    font-size: 24px;
+    color: #edf5e1;
+    margin: 0 0 0 150px;
+}
+
+.car__race {
+    border-bottom: #edf5e1 dashed 2px;
+    border-right: red dashed 2px;
+}

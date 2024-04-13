@@ -1,6 +1,7 @@
 import {Main} from '../pages/main.ts';
 import {Garage} from "../pages/GaragePage/garage";
 import {Winners} from "../pages/WinersPage/winners";
+import {data} from '../models/dataCar'
 
 export class Application {
   id: string;
@@ -16,7 +17,7 @@ export class Application {
 
   init (): void {
     this.main = new Main (this);
-    this.garage = new Garage (this);
+    this.garage = new Garage (this, data);
     this.winners = new Winners (this)
 
     this.main.render ();
