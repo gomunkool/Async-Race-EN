@@ -30,7 +30,7 @@ export class Garage {
     }
   }
 
-
+//////////////////////////////////////////////////////////////
   async init () {
     this.nodeCar = document.getElementById ('garage__race_count');
     const paginationPageCount = document.querySelector ('.pagination__num');
@@ -38,7 +38,14 @@ export class Garage {
     const paginationButtonRight = document.querySelector ('.pagination__button_right')
     const createForm = document.querySelector ('.garage__form')
 
-    this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=5`);
+
+    paginationButtonLeft.removeEventListener ('click', this.handlePaginationLeftClick);
+    paginationButtonRight.removeEventListener ('click', this.handlePaginationRightClick);
+
+    paginationButtonLeft.addEventListener ('click', this.handlePaginationLeftClick);
+    paginationButtonRight.addEventListener ('click', this.handlePaginationRightClick);
+
+    this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=7`);
     this.totalCars = (await this.fetchData ('http://localhost:3000/garage')).length;
 
     this.installationPagination (this.totalCars)
@@ -46,33 +53,16 @@ export class Garage {
     this.createCars ()
 
 
-    createForm.addEventListener ('submit', (event) => {
-      this.createCarForm (event)
-    })
+    const submitHandler = (event) => {
+      this.createCarForm (event);
+      createForm.removeEventListener ('submit', submitHandler);
+    };
+    
+    createForm.addEventListener ('submit', submitHandler);
 
-    paginationButtonLeft.addEventListener ('click', async () => {
-      if (this.currentPage > 1) {
-        this.currentPage -= 1
-        paginationPageCount.textContent = String (this.currentPage)
-        this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=5`);
-        this.createCars()
-      }
-    })
-    paginationButtonRight.addEventListener
-    ('click', async () => {
-      if (this.currentPage < Math.ceil (this.totalCars / 5)) {
-        this.currentPage += 1
-        paginationPageCount.textContent = String (this.currentPage)
-        this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=5`);
-        this.createCars()
-      }
-    })
-
-    // function changeColor (value) {
-    //   const inputField = document.getElementById ('inputField');
-    //   inputField.style.color = value;
-    // }
   }
+
+////////////////////////////////////////////////////////////////////////////////////
 
   createCars () {
     this.nodeCar.innerHTML = '';
@@ -80,10 +70,59 @@ export class Garage {
       (el: CarDataType) => {
         const element: Car = new Car (this, el, this.nodeCar);
         element.render ();
+        this.addEventListenersToCarButtons (element);
         return element;
       }
     );
   }
+
+  async deleteCar (id) {
+    try {
+      const response = await fetch (`http://localhost:3000/garage/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        console.log ('Car successfully deleted from the garage');
+        this.totalCars--;
+        await this.init ()
+      } else if (response.status === 404) {
+        console.error ('Car not found in the garage');
+      } else {
+        console.error ('Failed to delete car from the garage');
+      }
+    } catch (error) {
+      console.error ('Error deleting car from the garage:', error);
+    }
+  }
+
+  addEventListenersToCarButtons (car: Car) {
+    const selectButton = car.node.querySelector ('.button__select');
+    const removeButton = car.node.querySelectorAll ('.button__remove');
+    const startButton = car.node.querySelector ('.button__start');
+    const stopButton = car.node.querySelector ('.button__stop');
+
+
+    selectButton.addEventListener ('click', (event) => {
+    });
+
+
+    removeButton.forEach (el => {
+      el.addEventListener ('click', (event) => {
+        const id = (event.currentTarget as HTMLElement).getAttribute ('data-id');
+        this.deleteCar (id)
+      });
+    });
+
+
+    startButton.addEventListener ('click', () => {
+      console.log ('START button clicked');
+    });
+
+    stopButton.addEventListener ('click', () => {
+      console.log ('STOP button clicked');
+    });
+  }
+
 
   async createCarForm (event) {
     event.preventDefault ();
@@ -110,16 +149,12 @@ export class Garage {
           console.error ('Failed to create car:', response.status);
         }
       })
-      .then (data => {
-        console.log ('New car created:', data);
-      })
       .catch (error => {
         console.error ('Error creating car:', error);
       });
-    this.data = await this.fetchData ('http://localhost:3000/garage?_page=${this.currentPage}&_limit=5');
-    this.createCars()
+    this.data = await this.fetchData ('http://localhost:3000/garage?_page=${this.currentPage}&_limit=7');
+    this.createCars ()
     await this.init ()
-
   }
 
   installationPagination (carCount: number) {
@@ -128,9 +163,30 @@ export class Garage {
 
     if (paginationCarsCount && paginationPageCount) {
       paginationCarsCount.textContent = String (carCount);
-      paginationPageCount.textContent = '1';
+      paginationPageCount.textContent = String (this.currentPage);
     }
   }
+
+  handlePaginationLeftClick = async () => {
+    if (this.currentPage > 1) {
+      this.currentPage -= 1;
+      const paginationPageCount = document.querySelector ('.pagination__num');
+      paginationPageCount.textContent = String (this.currentPage);
+      this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=7`);
+      this.createCars ();
+    }
+  }
+
+  handlePaginationRightClick = async () => {
+    if (this.currentPage < Math.ceil (this.totalCars / 7)) {
+      this.currentPage += 1;
+      const paginationPageCount = document.querySelector ('.pagination__num');
+      paginationPageCount.textContent = String (this.currentPage);
+      this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=7`);
+      this.createCars ();
+    }
+  }
+
 
   render (): void {
     this.app.node.innerHTML = `
