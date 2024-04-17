@@ -17,7 +17,7 @@ export class Car {
     this.node.innerHTML += `
        <div class="car_count"> 
           <div class="car__buttons_count">
-              <button class="car__button button__select">SELECT</button>
+              <button class="car__button button__select" data-id="${this.dataElement.id}">SELECT</button>
               <button class="car__button button__remove" data-id="${this.dataElement.id}">REMOVE</button>
               <button class="car__button button__start">START</button>
               <button class="car__button button__stop">STOP</button>

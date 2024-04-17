@@ -10,6 +10,9 @@ export class Garage {
   totalPages: number;
   totalCars: number;
   currentPage: number;
+  createFormHandler: EventListener;
+  updateFormHandler: EventListener;
+
 
   constructor (app: Application, data: CarDataType[]) {
     this.app = app;
@@ -17,6 +20,10 @@ export class Garage {
     this.totalPages = 1;
     this.totalCars = 0;
     this.currentPage = 1;
+    this.createFormHandler = this.createCarForm.bind (this);
+    this.updateFormHandler = this.updateCar.bind (this);
+
+
   }
 
 
@@ -33,11 +40,9 @@ export class Garage {
 //////////////////////////////////////////////////////////////
   async init () {
     this.nodeCar = document.getElementById ('garage__race_count');
-    const paginationPageCount = document.querySelector ('.pagination__num');
     const paginationButtonLeft = document.querySelector ('.pagination__button_left')
     const paginationButtonRight = document.querySelector ('.pagination__button_right')
     const createForm = document.querySelector ('.garage__form')
-
 
     paginationButtonLeft.removeEventListener ('click', this.handlePaginationLeftClick);
     paginationButtonRight.removeEventListener ('click', this.handlePaginationRightClick);
@@ -52,14 +57,8 @@ export class Garage {
 
     this.createCars ()
 
-
-    const submitHandler = (event) => {
-      this.createCarForm (event);
-      createForm.removeEventListener ('submit', submitHandler);
-    };
-    
-    createForm.addEventListener ('submit', submitHandler);
-
+    createForm.removeEventListener ('submit', this.createFormHandler);
+    createForm.addEventListener ('submit', this.createFormHandler);
   }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -76,13 +75,14 @@ export class Garage {
     );
   }
 
+////////////////////////////////////////////////////////////////////////////////////
+
   async deleteCar (id) {
     try {
       const response = await fetch (`http://localhost:3000/garage/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
-        console.log ('Car successfully deleted from the garage');
         this.totalCars--;
         await this.init ()
       } else if (response.status === 404) {
@@ -95,14 +95,69 @@ export class Garage {
     }
   }
 
+////////////////////////////////////////////////////////////////////////////////////
+
+  async updateCar (event) {
+    const id = event.currentTarget.getAttribute ('data-id');
+
+    const removeButton = event.target as HTMLElement;
+    const carButtonsCountDiv = removeButton.closest ('.car_count');
+    const updateForm = document.querySelector ('.garage__form_update');
+
+    const submitHandler = async (event) => {
+      event.preventDefault ();
+      const {value: name} = document.querySelector ('.garage__text_update');
+      const {value: color} = document.querySelector ('.garage__color_update');
+
+      const carUpdate = {
+        name: name,
+        color: color
+      };
+
+      const options = {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify (carUpdate)
+      };
+
+      try {
+        const response = await fetch (`http://localhost:3000/garage/${id}`, options);
+        if (response.ok) {
+          console.log ('Car successfully updated');
+        } else {
+          console.error ('Failed to update car:', response.status);
+        }
+      } catch (error) {
+        console.error ('Error updating car:', error);
+      }
+
+      this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=7`);
+      this.createCars ();
+      await this.init ();
+      carButtonsCountDiv.classList.remove ('car_count_active');
+      updateForm.removeEventListener ('submit', submitHandler);
+    };
+
+    updateForm.addEventListener ('submit', submitHandler);
+  }
+
+////////////////////////////////////////////////////////////////////////////////////
   addEventListenersToCarButtons (car: Car) {
-    const selectButton = car.node.querySelector ('.button__select');
+    const selectButton = car.node.querySelectorAll ('.button__select');
     const removeButton = car.node.querySelectorAll ('.button__remove');
     const startButton = car.node.querySelector ('.button__start');
     const stopButton = car.node.querySelector ('.button__stop');
 
-
-    selectButton.addEventListener ('click', (event) => {
+    selectButton.forEach (el => {
+      el.addEventListener ('click', (event) => {
+        const removeButton = event.target as HTMLElement
+        const carButtonsCountDiv = removeButton.closest ('.car_count');
+        carButtonsCountDiv.classList.add ('car_count_active')
+        const id = (event.currentTarget as HTMLElement).getAttribute ('data-id');
+        this.updateCar (event)
+      });
     });
 
 
@@ -157,6 +212,8 @@ export class Garage {
     await this.init ()
   }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   installationPagination (carCount: number) {
     const paginationCarsCount = document.querySelector ('.pagination__cars');
     const paginationPageCount = document.querySelector ('.pagination__num');
@@ -195,11 +252,11 @@ export class Garage {
             <form class="garage__form">
                 <input type="text" placeholder="name" class="garage__text">
                 <input type="color" id="crete0color" class="garage__color" name="color" value="#e66465" />
-                <button class="garage__button">Create</button>
+                <button class="garage__button garage__button_create">Create</button>
             </form>
-            <form class="garage__form">
-                <input type="text" placeholder="name" class="garage__text">
-                <input type="color" id="crete0color" class="garage__color" name="color" value="#e66465" />
+            <form class="garage__form garage__form_update">
+                <input type="text" placeholder="name" class="garage__text garage__text_update">
+                <input type="color" id="crete0color" class="garage__color garage__color_update" name="color" value="#e66465" />
                 <button class="garage__button">Update</button>
             </form>
             <div class="garage__buttons_count">

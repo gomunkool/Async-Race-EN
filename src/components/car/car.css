@@ -1,5 +1,23 @@
+@keyframes carUpdateOpacity {
+    0% {
+        opacity: 100%;
+    }
+
+    100% {
+        opacity: 50%;
+    }
+}
+
 .car_count {
     margin: 0 0 20px 0;
+    opacity: 100%;
+}
+
+.car_count_active {
+    animation-name: carUpdateOpacity;
+    animation-duration: 0.7s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
 }
 
 .car__buttons_count {
