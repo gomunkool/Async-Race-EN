@@ -1,7 +1,9 @@
 export type CarDataType = {
   name: string;
   color: string;
-  id: number
+  id: number;
+  velocity?: number;
+  distance?: number
 };
 
 
@@ -21,4 +23,4 @@ export const data: CarDataType[] = [
     color: '#234f9f',
     id: 1
   },
-  ]
+]

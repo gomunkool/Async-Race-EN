@@ -19,8 +19,9 @@ export class Car {
           <div class="car__buttons_count">
               <button class="car__button button__select" data-id="${this.dataElement.id}">SELECT</button>
               <button class="car__button button__remove" data-id="${this.dataElement.id}">REMOVE</button>
-              <button class="car__button button__start">START</button>
-              <button class="car__button button__stop">STOP</button>
+              <button class="car__button button__move_start" data-id="${this.dataElement.id}">START</button>
+              <button class="car__button button__move_drive button__move-disabled" data-id="${this.dataElement.id}">DRIVE</button>
+              <button class="car__button button__move_stop button__move-disabled" data-id="${this.dataElement.id}">STOP</button>
               <h3 class="car__title">${this.dataElement.name}</h3>
           </div>
           <div class="car__race">

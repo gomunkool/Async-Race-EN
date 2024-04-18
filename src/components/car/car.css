@@ -38,6 +38,12 @@
     transition: 0.3s all;
 }
 
+.button__move-disabled {
+    pointer-events: none;
+    background-color: #edf5e1;
+    color: #379683;
+}
+
 .car__button:hover {
     background-color: #edf5e1;
     color: #379653;

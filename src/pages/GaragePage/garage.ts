@@ -12,6 +12,7 @@ export class Garage {
   currentPage: number;
   createFormHandler: EventListener;
   updateFormHandler: EventListener;
+  distinctionRacePX: number
 
 
   constructor (app: Application, data: CarDataType[]) {
@@ -22,6 +23,7 @@ export class Garage {
     this.currentPage = 1;
     this.createFormHandler = this.createCarForm.bind (this);
     this.updateFormHandler = this.updateCar.bind (this);
+    this.distinctionRacePX = 0
 
 
   }
@@ -139,16 +141,106 @@ export class Garage {
       carButtonsCountDiv.classList.remove ('car_count_active');
       updateForm.removeEventListener ('submit', submitHandler);
     };
-
     updateForm.addEventListener ('submit', submitHandler);
+  }
+
+////////////////////////////////////////////////////////////////////////////////////
+
+  async startEngine (event) {
+    const button = event.currentTarget
+    const id = +(event.currentTarget as HTMLElement).getAttribute ('data-id');
+    button.classList.add ('button__move-disabled')
+    const driveElement = button.nextElementSibling;
+    const stopButton = driveElement.nextElementSibling
+    stopButton.classList.remove ('button__move-disabled')
+
+
+    const url = `http://localhost:3000/engine?id=${id}&status=started`;
+
+    fetch (url, {
+      method: 'PATCH'
+    })
+      .then (response => {
+        if (!response.ok) {
+          throw new Error ('Network response was not ok');
+        }
+        return response.json ();
+      })
+      .then (data => {
+        driveElement.classList.remove ('button__move-disabled')
+        console.log ('Velocity:', data.velocity);
+        console.log ('Distance:', data.distance);
+        const foundCarIndex = this.data.findIndex (car => car.id === id);
+        if (foundCarIndex !== -1) {
+          this.data[foundCarIndex].velocity = data.velocity;
+          this.data[foundCarIndex].distance = data.distance;
+        }
+        console.log (this.data)
+      })
+      .catch (error => {
+        console.error ('There was a problem with the fetch operation:', error.message);
+      });
+
+    const carButtonsCountDiv = button.closest ('.car_count');
+    this.distinctionRacePX = carButtonsCountDiv.offsetWidth;
+
+
+  }
+
+  driveCar (event) {
+    const button = event.currentTarget
+    const id = (event.currentTarget as HTMLElement).getAttribute ('data-id');
+    button.classList.add ('button__move-disabled')
+
+
+    const url = `http://localhost:3000/engine?id=${id}&status=drive`;
+
+    fetch (url, {
+      method: 'PATCH'
+    })
+      .then (response => {
+        if (!response.ok) {
+          if (response.status === 400) {
+            throw new Error ('Wrong parameters: "id" should be any positive number, "status" should be "started", "stopped" or "drive"');
+          } else if (response.status === 404) {
+            throw new Error ('Engine parameters for car with such id was not found in the garage. Have you tried to set engine status to "started" before?');
+          } else if (response.status === 429) {
+            throw new Error ('Drive already in progress. You can\'t run drive for the same car twice while it\'s not stopped.');
+          } else if (response.status === 500) {
+            throw new Error ('Car has been stopped suddenly. It\'s engine was broken down.');
+          } else {
+            throw new Error ('Network response was not ok');
+          }
+        }
+        return response.json ();
+      })
+      .then (data => {
+        console.log (data);
+      })
+      .catch (error => {
+        console.error (`There was a problem with the fetch operation: ${error.message}`);
+      });
+
+  }
+
+////////////////////////////////////////////////////////////////////////////////////
+  stopCar (event) {
+    const button = event.currentTarget
+    const id = (event.currentTarget as HTMLElement).getAttribute ('data-id');
+    button.classList.add ('button__move-disabled')
+    const driveElement = button.previousElementSibling;
+    const engineButton = driveElement.previousElementSibling
+    driveElement.classList.add ('button__move-disabled')
+    engineButton.classList.remove ('button__move-disabled')
   }
 
 ////////////////////////////////////////////////////////////////////////////////////
   addEventListenersToCarButtons (car: Car) {
     const selectButton = car.node.querySelectorAll ('.button__select');
     const removeButton = car.node.querySelectorAll ('.button__remove');
-    const startButton = car.node.querySelector ('.button__start');
-    const stopButton = car.node.querySelector ('.button__stop');
+    const startButton = car.node.querySelectorAll ('.button__move_start');
+    const driveButton = car.node.querySelectorAll ('.button__move_drive');
+    const stopButton = car.node.querySelectorAll ('.button__move_stop');
 
     selectButton.forEach (el => {
       el.addEventListener ('click', (event) => {
@@ -169,13 +261,24 @@ export class Garage {
     });
 
 
-    startButton.addEventListener ('click', () => {
-      console.log ('START button clicked');
-    });
+    startButton.forEach (el => {
+      el.addEventListener ('click', (event) => {
+        this.startEngine (event)
+      })
+    })
 
-    stopButton.addEventListener ('click', () => {
-      console.log ('STOP button clicked');
-    });
+    driveButton.forEach (el => {
+      el.addEventListener ('click', (event) => {
+        this.driveCar (event)
+      })
+    })
+
+    stopButton.forEach (el => {
+      el.addEventListener ('click', (event) => {
+        this.stopCar (event)
+      })
+    })
+
   }
 
 
