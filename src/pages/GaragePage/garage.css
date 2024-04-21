@@ -1,3 +1,7 @@
+.main-garage {
+    position: relative;
+}
+
 .garage__title {
     color: #8ee4af;
     font-size: 24px;
@@ -49,6 +53,24 @@
     color: #edf5e1;
     font-size: 24px;
     margin: 0 20px 0 0;
+    transition: 0.3s all;
+}
+
+.garage__buttons:hover {
+    background-color: #edf5e1;
+    color: #379653;
+}
+
+.garage__buttons_disabled {
+    pointer-events: none;
+    background-color: #edf5e1;
+    color: #379683;
+}
+
+.garage__buttons_reset-disabled {
+    pointer-events: none;
+    background-color: #edf5e1;
+    color: #379683;
 }
 
 .pagination_count {
@@ -76,4 +98,30 @@
 
 .garage__race_count {
     padding: 0 20px;
+}
+
+.winner-modal__count {
+    background-color: #edf5e1;
+    border: #379653 2px solid;
+    border-radius: 15px;
+    position: absolute;
+    left: 35%;
+    top: 30%;
+    width: 400px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    visibility: hidden;
+}
+
+.winner-modal__count_active {
+    visibility: visible;
+}
+
+.winner-modal__text {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    color: #05386b;
 }

@@ -1,0 +1,12 @@
+.winner__count {
+    display: flex;
+    align-items: center;
+
+}
+
+.winner__item {
+    width: 250px;
+    margin: 20px 0 0 0;
+    color: #edf5e1;
+    font-size: 24px;
+}

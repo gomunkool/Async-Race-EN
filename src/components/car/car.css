@@ -1,3 +1,9 @@
+
+.car_count {
+    margin: 0 0 20px 0;
+    opacity: 100%;
+}
+
 @keyframes carUpdateOpacity {
     0% {
         opacity: 100%;
@@ -6,11 +12,6 @@
     100% {
         opacity: 50%;
     }
-}
-
-.car_count {
-    margin: 0 0 20px 0;
-    opacity: 100%;
 }
 
 .car_count_active {
@@ -55,7 +56,30 @@
     margin: 0 0 0 150px;
 }
 
+@keyframes carDrive {
+    0% {
+        left: 0
+    }
+
+    100% {
+        left: 100%
+    }
+}
+
 .car__race {
     border-bottom: #edf5e1 dashed 2px;
     border-right: red dashed 2px;
+    width: 90vw;
 }
+
+.car__img {
+    position: relative;
+
+}
+
+.car__img_drive {
+    left: 100%;
+    animation-name: carDrive;
+    animation-timing-function: linear;
+}
+

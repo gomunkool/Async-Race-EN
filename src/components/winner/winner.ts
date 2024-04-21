@@ -1,31 +1,25 @@
-import {Garage} from '../../pages/GaragePage/garage';
-import {CarDataType} from '../../models/dataCar'
+import {Winners} from '../../pages/WinersPage/winners.ts';
+import {CarDataType} from "../../models/dataCar";
 
-export class Car {
-  parent: Garage;
+export class Winner {
+  parent: Winners;
   dataElement: CarDataType;
   node: HTMLElement;
+  index: number
 
-  constructor (parent: Garage, dataElement: CarDataType, node: HTMLElement) {
+  constructor (parent: Winners, dataElement: CarDataType, node: HTMLElement, index: number) {
     this.parent = parent;
     this.dataElement = dataElement;
     this.node = node;
+    this.index = index
   }
 
 
   render (): void {
     this.node.innerHTML += `
-       <div class="car_count"> 
-          <div class="car__buttons_count">
-              <button class="car__button button__select" data-id="${this.dataElement.id}">SELECT</button>
-              <button class="car__button button__remove" data-id="${this.dataElement.id}">REMOVE</button>
-              <button class="car__button button__move_start" data-id="${this.dataElement.id}">START</button>
-              <button class="car__button button__move_drive button__move-disabled" data-id="${this.dataElement.id}">DRIVE</button>
-              <button class="car__button button__move_stop button__move-disabled" data-id="${this.dataElement.id}">STOP</button>
-              <h3 class="car__title">${this.dataElement.name}</h3>
-          </div>
-          <div class="car__race">
-            <svg class="car__img" fill="${this.dataElement.color}" height="50px" width="100px" 
+        <div class="winner__count"> 
+            <div class="winner__item winner__number">${this.index + 1}</div>     
+            <svg class="winner__item winner__img" fill="${this.dataElement.color}"  height="50px" width="100px" 
 xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 256 158.7"
 xml:space="preserve">
 <path d="M80.1,129.2c0,15.2-12.3,27.5-27.5,27.5c-15.2,0-27.5-12.3-27.5-27.5s12.3-27.5,27.5-27.5C67.8,101.7,80.1,114,80.1,129.2z
@@ -40,7 +34,9 @@ xml:space="preserve">
 \tl14.1-33.8c0.4-1.7,1.8-3,3.6-3h33.2c1.2,0,2.1,1,2.1,2.1V57.7z M180.7,59.2h-59.2c-1.1,0-2.1-0.9-2.1-2.1v-34
 \tc0-1.1,0.9-2.1,2.1-2.1h29.3c0.6,0,1.1,0.2,1.5,0.7l29.9,34C183.4,57.1,182.5,59.2,180.7,59.2z"/>
 </svg>
-          </div>
+            <div class="winner__item winner__name">${this.dataElement.name}</div>
+            <div class="winner__item winner__wins">${this.dataElement.wins}</div>
+            <div class="winner__item winner__time">${Math.round (this.dataElement.time * 100) / 100}  second</div>
        </div> 
          `;
   }

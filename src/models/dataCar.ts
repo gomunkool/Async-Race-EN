@@ -3,7 +3,9 @@ export type CarDataType = {
   color: string;
   id: number;
   velocity?: number;
-  distance?: number
+  distance?: number;
+  time?: number;
+  wins?: number
 };
 
 

@@ -1,6 +1,7 @@
 import {Application} from '../../system/app';
 import {CarDataType} from "../../models/dataCar";
 import {Car} from "../../components/car/car";
+import {randomCars} from "../../models/dataRandomCars"
 
 
 export class Garage {
@@ -12,7 +13,12 @@ export class Garage {
   currentPage: number;
   createFormHandler: EventListener;
   updateFormHandler: EventListener;
-  distinctionRacePX: number
+  createRandomCarsHandler: EventListener;
+  raceCarsHandler: EventListener;
+  resetCarsHandler: EventListener;
+  distinctionRacePX: number;
+  winnerName: string;
+  winnerTime: number
 
 
   constructor (app: Application, data: CarDataType[]) {
@@ -23,9 +29,12 @@ export class Garage {
     this.currentPage = 1;
     this.createFormHandler = this.createCarForm.bind (this);
     this.updateFormHandler = this.updateCar.bind (this);
-    this.distinctionRacePX = 0
-
-
+    this.createRandomCarsHandler = this.createRandomCars.bind (this);
+    this.raceCarsHandler = this.raceAllCars.bind (this);
+    this.resetCarsHandler = this.resetAllCars.bind (this);
+    this.distinctionRacePX = 0;
+    this.winnerName = '';
+    this.winnerTime = 100;
   }
 
 
@@ -46,6 +55,22 @@ export class Garage {
     const paginationButtonRight = document.querySelector ('.pagination__button_right')
     const createForm = document.querySelector ('.garage__form')
 
+    const generateCarsButton = document.querySelector ('.garage__buttons_generate')
+    const raceCarsButton = document.querySelector ('.garage__buttons_race')
+    const resetCarsButton = document.querySelector ('.garage__buttons_reset')
+
+    resetCarsButton.removeEventListener ('click', this.resetCarsHandler);
+    resetCarsButton.addEventListener ('click', this.resetCarsHandler)
+
+
+    raceCarsButton.removeEventListener ('click', this.raceCarsHandler);
+    raceCarsButton.addEventListener ('click', this.raceCarsHandler)
+
+
+    generateCarsButton.removeEventListener ('click', this.createRandomCarsHandler);
+    generateCarsButton.addEventListener ('click', this.createRandomCarsHandler)
+
+
     paginationButtonLeft.removeEventListener ('click', this.handlePaginationLeftClick);
     paginationButtonRight.removeEventListener ('click', this.handlePaginationRightClick);
 
@@ -53,6 +78,7 @@ export class Garage {
     paginationButtonRight.addEventListener ('click', this.handlePaginationRightClick);
 
     this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=7`);
+
     this.totalCars = (await this.fetchData ('http://localhost:3000/garage')).length;
 
     this.installationPagination (this.totalCars)
@@ -61,6 +87,204 @@ export class Garage {
 
     createForm.removeEventListener ('submit', this.createFormHandler);
     createForm.addEventListener ('submit', this.createFormHandler);
+  }
+
+////////////////////////////////////////////////////////////////////////////////////
+
+
+  resetAllCars () {
+    const resetButton = document.querySelector ('.garage__buttons_reset')
+    const raceCarsButton = document.querySelector ('.garage__buttons_race')
+    const winnerModalCount = document.querySelector ('.winner-modal__count')
+    const allCarsImg = document.querySelectorAll ('.car__img')
+    const allButtonsStart = document.querySelectorAll ('.button__move_start')
+
+
+    resetButton.classList.add ('garage__buttons_reset-disabled')
+    raceCarsButton.classList.remove ('garage__buttons_disabled')
+    winnerModalCount.classList.remove ('winner-modal__count_active')
+
+    allCarsImg.forEach (img => {
+      img.classList.remove ('car__img_drive')
+    })
+
+    allButtonsStart.forEach (but => {
+      but.classList.remove ('button__move-disabled')
+    })
+
+    this.winnerName = '';
+    this.winnerTime = 100;
+    this.init ()
+  }
+
+////////////////////////////////////////////////////////////////////////////////////
+
+
+  raceAllCars () {
+    const allButtonsStart = document.querySelectorAll ('.button__move_start')
+    const allButtonsDrive = document.querySelectorAll ('.button__move_drive')
+    const allButtonsStop = document.querySelectorAll ('.button__move_stop')
+    const allCarsImg = document.querySelectorAll ('.car__img')
+    const raceCarsButton = document.querySelector ('.garage__buttons_race')
+    const winnerModalName = document.querySelector ('.winner-modal__name')
+    const winnerModalTime = document.querySelector ('.winner-modal__time')
+    const winnerModalCount = document.querySelector ('.winner-modal__count')
+    const resetButton = document.querySelector ('.garage__buttons_reset')
+
+
+    raceCarsButton.classList.add ('garage__buttons_disabled')
+
+    allButtonsStart.forEach (but => {
+      but.classList.add ('button__move-disabled')
+    })
+
+    const {offsetWidth} = document.querySelector ('.car__race');
+    this.distinctionRacePX = offsetWidth;
+
+    this.data.forEach ((car, index) => {
+      const url = `http://localhost:3000/engine?id=${car.id}&status=started`;
+
+      fetch (url, {
+        method: 'PATCH'
+      })
+        .then (response => {
+          if (!response.ok) {
+            throw new Error ('Network response was not ok');
+          }
+          return response.json ();
+        })
+        .then (data => {
+          const foundCarIndex = this.data.findIndex (el => el.id === car.id);
+          this.data[foundCarIndex].velocity = data.velocity;
+          this.data[foundCarIndex].distance = data.distance;
+          this.data[foundCarIndex].time = this.distinctionRacePX / data.velocity;
+          const svgCar: HTMLElement = allCarsImg[index]
+          svgCar.style.animationDuration = `${this.data[index].time}s`
+          svgCar.classList.add ('car__img_drive')
+
+          const urlDrive = `http://localhost:3000/engine?id=${car.id}&status=drive`;
+
+          fetch (urlDrive, {
+            method: 'PATCH'
+          })
+            .then (response => {
+              if (!response.ok) {
+                if (response.status === 400) {
+                  throw new Error ('Wrong parameters: "id" should be any positive number, "status" should be "started", "stopped" or "drive"');
+                } else if (response.status === 404) {
+                  throw new Error ('Engine parameters for car with such id was not found in the garage. Have you tried to set engine status to "started" before?');
+                } else if (response.status === 429) {
+                  throw new Error ('Drive already in progress. You can\'t run drive for the same car twice while it\'s not stopped.');
+                } else if (response.status === 500) {
+                  svgCar.style.animationPlayState = 'paused'
+                  throw new Error ('Car has been stopped suddenly. It\'s engine was broken down.');
+                } else {
+                  throw new Error ('Network response was not ok');
+                }
+              }
+              return response.json ();
+            })
+            .then (data => {
+              if (car.time < this.winnerTime) {
+                this.winnerTime = <number>car.time
+                this.winnerName = <string>car.name
+
+
+                setTimeout (() => {
+                  winnerModalName.textContent = this.winnerName
+                  winnerModalTime.textContent = `${Math.round (this.winnerTime * 100) / 100}  second`
+                  winnerModalCount.classList.add ('winner-modal__count_active')
+                  resetButton.classList.remove ('garage__buttons_reset-disabled')
+                }, 6000);
+
+
+                fetch(`http://localhost:3000/winners/${car.id}`)
+                  .then(response => {
+                    if (response.ok) {
+                      return response.json();
+                    }
+                    if (response.status === 404) {
+                      throw new Error('Winner not found');
+                    }
+                    throw new Error('Failed to get winner');
+                  })
+                  .then(data => {
+                    const winnerChangeWins = data
+                    winnerChangeWins.wins++
+                    const requestOptions = {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify(winnerChangeWins)
+                    };
+
+                    fetch('http://localhost:3000/winners', requestOptions)
+                      .then(response => {
+                        if (response.ok) {
+                          return response.json();
+                        }
+                        throw new Error('Failed to create winner');
+                      })
+                  })
+                  .catch(error => {
+                    const postData = {
+                      id: car.id,
+                      wins: 1,
+                      time: car.time
+                    };
+
+                    const requestOptions = {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify(postData)
+                    };
+
+                    fetch('http://localhost:3000/winners', requestOptions)
+                      .then(response => {
+                        if (response.ok) {
+                          return response.json();
+                        }
+                        throw new Error('Failed to create winner');
+                      })
+                      .then(data => {
+                        console.log('Winner created:', data);
+                      })
+                      .catch(error => {
+                        console.error('Error creating winner:', error);
+                      });
+                  });
+              }
+
+            })
+            .catch (error => {
+              console.error (`There was a problem with the fetch operation: ${error.message}`);
+            });
+
+
+        }).catch (error => {
+        console.error ('There was a problem with the fetch operation:', error.message);
+      });
+    })
+  }
+
+////////////////////////////////////////////////////////////////////////////////////
+
+  async createRandomCars () {
+    for (let i = 0; i < 100; i++) {
+      const r = Math.floor (Math.random () * 256);
+      const g = Math.floor (Math.random () * 256);
+      const b = Math.floor (Math.random () * 256);
+      const hexColor = '#' + [r, g, b].map (component => {
+        const hex = component.toString (16);
+        return hex.length === 1 ? '0' + hex : hex;
+      }).join ('');
+      const randomIndex = Math.floor (Math.random () * randomCars.length);
+      const nameCar = randomCars[randomIndex];
+      this.createCarNameColor (nameCar, hexColor)
+    }
   }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +378,6 @@ export class Garage {
     const stopButton = driveElement.nextElementSibling
     stopButton.classList.remove ('button__move-disabled')
 
-
     const url = `http://localhost:3000/engine?id=${id}&status=started`;
 
     fetch (url, {
@@ -174,8 +397,9 @@ export class Garage {
         if (foundCarIndex !== -1) {
           this.data[foundCarIndex].velocity = data.velocity;
           this.data[foundCarIndex].distance = data.distance;
+          this.data[foundCarIndex].time = this.distinctionRacePX / data.velocity;
+
         }
-        console.log (this.data)
       })
       .catch (error => {
         console.error ('There was a problem with the fetch operation:', error.message);
@@ -184,13 +408,19 @@ export class Garage {
     const carButtonsCountDiv = button.closest ('.car_count');
     this.distinctionRacePX = carButtonsCountDiv.offsetWidth;
 
-
   }
 
   driveCar (event) {
     const button = event.currentTarget
-    const id = (event.currentTarget as HTMLElement).getAttribute ('data-id');
+    const id = +(event.currentTarget as HTMLElement).getAttribute ('data-id');
     button.classList.add ('button__move-disabled')
+    const parentDiv = button.closest ('.car__buttons_count');
+    const svgCount = parentDiv.nextElementSibling;
+    const svgCar = svgCount.querySelector ('.car__img')
+    const currentCar = this.data.find (car => car.id === id)
+
+    svgCar.style.animationDuration = `${+currentCar.time}s`
+    svgCar.classList.add ('car__img_drive')
 
 
     const url = `http://localhost:3000/engine?id=${id}&status=drive`;
@@ -207,6 +437,7 @@ export class Garage {
           } else if (response.status === 429) {
             throw new Error ('Drive already in progress. You can\'t run drive for the same car twice while it\'s not stopped.');
           } else if (response.status === 500) {
+            svgCar.style.animationPlayState = 'paused'
             throw new Error ('Car has been stopped suddenly. It\'s engine was broken down.');
           } else {
             throw new Error ('Network response was not ok');
@@ -220,7 +451,6 @@ export class Garage {
       .catch (error => {
         console.error (`There was a problem with the fetch operation: ${error.message}`);
       });
-
   }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +462,13 @@ export class Garage {
     const engineButton = driveElement.previousElementSibling
     driveElement.classList.add ('button__move-disabled')
     engineButton.classList.remove ('button__move-disabled')
+
+    const parentDiv = button.closest ('.car__buttons_count');
+    const svgCount = parentDiv.nextElementSibling;
+    const svgCar = svgCount.querySelector ('.car__img')
+
+    svgCar.classList.remove ('car__img_drive')
+    this.init ()
   }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -241,6 +478,7 @@ export class Garage {
     const startButton = car.node.querySelectorAll ('.button__move_start');
     const driveButton = car.node.querySelectorAll ('.button__move_drive');
     const stopButton = car.node.querySelectorAll ('.button__move_stop');
+
 
     selectButton.forEach (el => {
       el.addEventListener ('click', (event) => {
@@ -282,11 +520,15 @@ export class Garage {
   }
 
 
-  async createCarForm (event) {
+  createCarForm (event) {
     event.preventDefault ();
     const {value: name} = document.querySelector ('.garage__text');
     const {value: color} = document.querySelector ('.garage__color');
+    this.createCarNameColor (name, color)
+  }
 
+
+  async createCarNameColor (name, color) {
     const carData = {
       name: name,
       color: color
@@ -314,6 +556,7 @@ export class Garage {
     this.createCars ()
     await this.init ()
   }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -364,7 +607,7 @@ export class Garage {
             </form>
             <div class="garage__buttons_count">
                 <button class="garage__buttons garage__buttons_race">RACE</button>
-                <button class="garage__buttons garage__buttons_reset">RESET</button>
+                <button class="garage__buttons garage__buttons_reset garage__buttons_reset-disabled">RESET</button>
                 <button class="garage__buttons garage__buttons_generate">GENERATE CARS</button>            
             </div>
             <div class="pagination_count">
@@ -376,6 +619,11 @@ export class Garage {
                 <div class="pagination__cars">${this.totalCars}</div>
             </div>
             <div id="garage__race_count" class="garage__race_count"></div>
+            <div class="winner-modal__count">
+                <div class="winner-modal__text">Winner</div>
+                <div class="winner-modal__text winner-modal__name">${this.winnerName}</div>
+                <div class="winner-modal__text winner-modal__time">${this.winnerTime}</div>
+            </div>
         </div>
     `;
     this.init ();

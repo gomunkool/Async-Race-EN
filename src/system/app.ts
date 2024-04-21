@@ -18,7 +18,7 @@ export class Application {
   init (): void {
     this.main = new Main (this);
     this.garage = new Garage (this, data);
-    this.winners = new Winners (this)
+    this.winners = new Winners (this, data)
 
     this.main.render ();
   }
