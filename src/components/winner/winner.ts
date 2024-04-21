@@ -36,8 +36,7 @@ xml:space="preserve">
 </svg>
             <div class="winner__item winner__name">${this.dataElement.name}</div>
             <div class="winner__item winner__wins">${this.dataElement.wins}</div>
-            <div class="winner__item winner__time">${Math.round (this.dataElement.time * 100) / 100}  second</div>
-       </div> 
+            <div class="winner__item winner__time">${this.dataElement.time ? Math.round (this.dataElement.time * 100) / 100 : 'N/A'} second</div>       </div> 
          `;
   }
 

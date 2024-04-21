@@ -138,7 +138,12 @@ export class Garage {
       but.classList.add ('button__move-disabled')
     })
 
-    const {offsetWidth} = document.querySelector ('.car__race');
+    const element = document.querySelector ('.car__race') as HTMLElement | null;
+    let offsetWidth: number | undefined;
+
+    if (element) {
+      offsetWidth = element.offsetWidth;
+    }
     this.distinctionRacePX = offsetWidth;
 
     this.data.forEach ((car, index) => {
@@ -158,7 +163,7 @@ export class Garage {
           this.data[foundCarIndex].velocity = data.velocity;
           this.data[foundCarIndex].distance = data.distance;
           this.data[foundCarIndex].time = this.distinctionRacePX / data.velocity;
-          const svgCar: HTMLElement = allCarsImg[index]
+          const svgCar: HTMLElement = allCarsImg[index] as HTMLElement;
           svgCar.style.animationDuration = `${this.data[index].time}s`
           svgCar.classList.add ('car__img_drive')
 
@@ -198,17 +203,17 @@ export class Garage {
                 }, 6000);
 
 
-                fetch(`http://localhost:3000/winners/${car.id}`)
-                  .then(response => {
+                fetch (`http://localhost:3000/winners/${car.id}`)
+                  .then (response => {
                     if (response.ok) {
-                      return response.json();
+                      return response.json ();
                     }
                     if (response.status === 404) {
-                      throw new Error('Winner not found');
+                      throw new Error ('Winner not found');
                     }
-                    throw new Error('Failed to get winner');
+                    throw new Error ('Failed to get winner');
                   })
-                  .then(data => {
+                  .then (data => {
                     const winnerChangeWins = data
                     winnerChangeWins.wins++
                     const requestOptions = {
@@ -216,18 +221,18 @@ export class Garage {
                       headers: {
                         'Content-Type': 'application/json'
                       },
-                      body: JSON.stringify(winnerChangeWins)
+                      body: JSON.stringify (winnerChangeWins)
                     };
 
-                    fetch('http://localhost:3000/winners', requestOptions)
-                      .then(response => {
+                    fetch ('http://localhost:3000/winners', requestOptions)
+                      .then (response => {
                         if (response.ok) {
-                          return response.json();
+                          return response.json ();
                         }
-                        throw new Error('Failed to create winner');
+                        throw new Error ('Failed to create winner');
                       })
                   })
-                  .catch(error => {
+                  .catch (error => {
                     const postData = {
                       id: car.id,
                       wins: 1,
@@ -239,21 +244,21 @@ export class Garage {
                       headers: {
                         'Content-Type': 'application/json'
                       },
-                      body: JSON.stringify(postData)
+                      body: JSON.stringify (postData)
                     };
 
-                    fetch('http://localhost:3000/winners', requestOptions)
-                      .then(response => {
+                    fetch ('http://localhost:3000/winners', requestOptions)
+                      .then (response => {
                         if (response.ok) {
-                          return response.json();
+                          return response.json ();
                         }
-                        throw new Error('Failed to create winner');
+                        throw new Error ('Failed to create winner');
                       })
-                      .then(data => {
-                        console.log('Winner created:', data);
+                      .then (data => {
+                        console.log ('Winner created:', data);
                       })
-                      .catch(error => {
-                        console.error('Error creating winner:', error);
+                      .catch (error => {
+                        console.error ('Error creating winner:', error);
                       });
                   });
               }
@@ -332,8 +337,12 @@ export class Garage {
 
     const submitHandler = async (event) => {
       event.preventDefault ();
-      const {value: name} = document.querySelector ('.garage__text_update');
-      const {value: color} = document.querySelector ('.garage__color_update');
+
+      const nameInputElement = document.querySelector ('.garage__text_update');
+      const name = nameInputElement !== null ? (nameInputElement as HTMLInputElement).value : '';
+
+      const colorInputElement = document.querySelector ('.garage__color_update');
+      const color = colorInputElement !== null ? (colorInputElement as HTMLInputElement).value : '';
 
       const carUpdate = {
         name: name,
@@ -362,22 +371,31 @@ export class Garage {
       this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=7`);
       this.createCars ();
       await this.init ();
-      carButtonsCountDiv.classList.remove ('car_count_active');
-      updateForm.removeEventListener ('submit', submitHandler);
+      if (carButtonsCountDiv !== null) {
+        carButtonsCountDiv.classList.remove ('car_count_active');
+      }
+      if (updateForm !== null) {
+        updateForm.removeEventListener ('submit', submitHandler);
+      }
     };
-    updateForm.addEventListener ('submit', submitHandler);
+    if (updateForm !== null) {
+      updateForm.addEventListener ('submit', submitHandler);
+    }
   }
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-  async startEngine (event) {
+  async startEngine (event: MouseEvent) {
     const button = event.currentTarget
-    const id = +(event.currentTarget as HTMLElement).getAttribute ('data-id');
-    button.classList.add ('button__move-disabled')
-    const driveElement = button.nextElementSibling;
-    const stopButton = driveElement.nextElementSibling
-    stopButton.classList.remove ('button__move-disabled')
-
+    const id = +(event.currentTarget as HTMLElement).getAttribute ('data-id')!;
+    if (button instanceof Element) {
+      button.classList.add ('button__move-disabled');
+    }
+    const driveElement = button instanceof Element ? button.nextElementSibling : null;
+    const stopButton = driveElement ? driveElement.nextElementSibling : null;
+    if (stopButton) {
+      stopButton.classList.remove ('button__move-disabled');
+    }
     const url = `http://localhost:3000/engine?id=${id}&status=started`;
 
     fetch (url, {
@@ -390,9 +408,9 @@ export class Garage {
         return response.json ();
       })
       .then (data => {
-        driveElement.classList.remove ('button__move-disabled')
-        console.log ('Velocity:', data.velocity);
-        console.log ('Distance:', data.distance);
+        if (driveElement) {
+          driveElement.classList.remove ('button__move-disabled');
+        }
         const foundCarIndex = this.data.findIndex (car => car.id === id);
         if (foundCarIndex !== -1) {
           this.data[foundCarIndex].velocity = data.velocity;
@@ -405,23 +423,29 @@ export class Garage {
         console.error ('There was a problem with the fetch operation:', error.message);
       });
 
-    const carButtonsCountDiv = button.closest ('.car_count');
-    this.distinctionRacePX = carButtonsCountDiv.offsetWidth;
-
+    const carButtonsCountDiv = button instanceof Element ? button.closest ('.car_count') as HTMLElement : null;
+    if (carButtonsCountDiv) {
+      this.distinctionRacePX = carButtonsCountDiv.offsetWidth;
+    }
   }
 
-  driveCar (event) {
+  driveCar (event: MouseEvent) {
     const button = event.currentTarget
-    const id = +(event.currentTarget as HTMLElement).getAttribute ('data-id');
-    button.classList.add ('button__move-disabled')
-    const parentDiv = button.closest ('.car__buttons_count');
-    const svgCount = parentDiv.nextElementSibling;
-    const svgCar = svgCount.querySelector ('.car__img')
+    const idAttr = (event.currentTarget as HTMLElement).getAttribute ('data-id');
+    const id = idAttr ? +idAttr : 0;
+    if (button instanceof Element && button.classList) {
+      button.classList.add ('button__move-disabled');
+    }
+    const parentDiv = button instanceof Element ? button.closest ('.car__buttons_count') : null;
+    const svgCount = parentDiv ? parentDiv.nextElementSibling : null;
+    const svgCar = svgCount?.querySelector ('.car__img') as HTMLElement;
     const currentCar = this.data.find (car => car.id === id)
 
-    svgCar.style.animationDuration = `${+currentCar.time}s`
-    svgCar.classList.add ('car__img_drive')
 
+    if (svgCar) {
+      svgCar.style.animationDuration = `${currentCar && currentCar.time ? +currentCar.time : 0}s`;
+      svgCar.classList.add ('car__img_drive');
+    }
 
     const url = `http://localhost:3000/engine?id=${id}&status=drive`;
 
@@ -437,7 +461,10 @@ export class Garage {
           } else if (response.status === 429) {
             throw new Error ('Drive already in progress. You can\'t run drive for the same car twice while it\'s not stopped.');
           } else if (response.status === 500) {
-            svgCar.style.animationPlayState = 'paused'
+            const svgCar = svgCount?.querySelector ('.car__img') as HTMLElement;
+            if (svgCar) {
+              svgCar.style.animationPlayState = 'paused';
+            }
             throw new Error ('Car has been stopped suddenly. It\'s engine was broken down.');
           } else {
             throw new Error ('Network response was not ok');
@@ -454,20 +481,27 @@ export class Garage {
   }
 
 ////////////////////////////////////////////////////////////////////////////////////
-  stopCar (event) {
-    const button = event.currentTarget
-    const id = (event.currentTarget as HTMLElement).getAttribute ('data-id');
+  stopCar (event: MouseEvent) {
+    const button = event.currentTarget as HTMLElement;
     button.classList.add ('button__move-disabled')
-    const driveElement = button.previousElementSibling;
-    const engineButton = driveElement.previousElementSibling
-    driveElement.classList.add ('button__move-disabled')
-    engineButton.classList.remove ('button__move-disabled')
-
-    const parentDiv = button.closest ('.car__buttons_count');
-    const svgCount = parentDiv.nextElementSibling;
-    const svgCar = svgCount.querySelector ('.car__img')
-
-    svgCar.classList.remove ('car__img_drive')
+    const driveElement = (button as Element).previousElementSibling;
+    let engineButton;
+    if (driveElement) {
+      engineButton = driveElement.previousElementSibling;
+    }
+    if (driveElement) {
+      driveElement.classList.add ('button__move-disabled');
+    }
+    if (engineButton) {
+      engineButton.classList.remove ('button__move-disabled');
+    }
+    const button2 = event.target as HTMLElement;
+    const parentDiv = button2.closest ('.car__buttons_count');
+    const svgCount = parentDiv ? parentDiv.nextElementSibling : null;
+    const svgCar = svgCount ? svgCount.querySelector ('.car__img') : null;
+    if (svgCar) {
+      svgCar.classList.remove ('car__img_drive');
+    }
     this.init ()
   }
 
@@ -484,8 +518,9 @@ export class Garage {
       el.addEventListener ('click', (event) => {
         const removeButton = event.target as HTMLElement
         const carButtonsCountDiv = removeButton.closest ('.car_count');
-        carButtonsCountDiv.classList.add ('car_count_active')
-        const id = (event.currentTarget as HTMLElement).getAttribute ('data-id');
+        if (carButtonsCountDiv) {
+          carButtonsCountDiv.classList.add ('car_count_active');
+        }
         this.updateCar (event)
       });
     });
@@ -498,37 +533,45 @@ export class Garage {
       });
     });
 
+    startButton.forEach ((el) => {
+      const context = this;
+      el.addEventListener ('click', (event: MouseEvent) => {
+        context.startEngine (event);
+      });
+    });
 
-    startButton.forEach (el => {
-      el.addEventListener ('click', (event) => {
-        this.startEngine (event)
-      })
-    })
 
-    driveButton.forEach (el => {
-      el.addEventListener ('click', (event) => {
-        this.driveCar (event)
-      })
-    })
+    driveButton.forEach ((el) => {
+      if (el instanceof HTMLElement) {
+        el.addEventListener ('click', (event: MouseEvent) => {
+          this.driveCar (event);
+        });
+      }
+    });
 
-    stopButton.forEach (el => {
-      el.addEventListener ('click', (event) => {
-        this.stopCar (event)
-      })
-    })
+    stopButton.forEach ((el) => {
+      if (el instanceof HTMLElement) {
+        el.addEventListener ('click', (event: MouseEvent) => {
+          this.stopCar (event);
+        });
+      }
+    });
 
   }
 
 
-  createCarForm (event) {
+  createCarForm (event: MouseEvent) {
     event.preventDefault ();
-    const {value: name} = document.querySelector ('.garage__text');
-    const {value: color} = document.querySelector ('.garage__color');
+
+    const nameInput = document.querySelector<HTMLInputElement> ('.garage__text');
+    const colorInput = document.querySelector<HTMLInputElement> ('.garage__color');
+    const name = nameInput ? nameInput.value : '';
+    const color = colorInput ? colorInput.value : '';
     this.createCarNameColor (name, color)
   }
 
 
-  async createCarNameColor (name, color) {
+  async createCarNameColor (name: string, color: string) {
     const carData = {
       name: name,
       color: color
@@ -574,7 +617,11 @@ export class Garage {
     if (this.currentPage > 1) {
       this.currentPage -= 1;
       const paginationPageCount = document.querySelector ('.pagination__num');
-      paginationPageCount.textContent = String (this.currentPage);
+
+      if (paginationPageCount) {
+        paginationPageCount.textContent = String (this.currentPage);
+
+      }
       this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=7`);
       this.createCars ();
     }
@@ -584,7 +631,9 @@ export class Garage {
     if (this.currentPage < Math.ceil (this.totalCars / 7)) {
       this.currentPage += 1;
       const paginationPageCount = document.querySelector ('.pagination__num');
-      paginationPageCount.textContent = String (this.currentPage);
+      if (paginationPageCount) {
+        paginationPageCount.textContent = String (this.currentPage);
+      }
       this.data = await this.fetchData (`http://localhost:3000/garage?_page=${this.currentPage}&_limit=7`);
       this.createCars ();
     }
@@ -592,7 +641,8 @@ export class Garage {
 
 
   render (): void {
-    this.app.node.innerHTML = `
+    if (this.app.node && "innerHTML" in this.app.node) {
+      this.app.node.innerHTML = `
         <div class="main-garage">
             <h2 class="garage__title">Garage</h2>
             <form class="garage__form">
@@ -626,10 +676,13 @@ export class Garage {
             </div>
         </div>
     `;
+    }
     this.init ();
   }
 
   delete (): void {
-    this.app.node.innerHTML = '';
+    if (this.app.node && "innerHTML" in this.app.node) {
+      this.app.node.innerHTML = '';
+    }
   }
 }

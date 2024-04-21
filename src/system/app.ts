@@ -5,7 +5,7 @@ import {data} from '../models/dataCar'
 
 export class Application {
   id: string;
-  node: HTMLElement;
+  node: HTMLElement | null;
   main: Main;
   garage: Garage;
   winners: Winners
@@ -13,6 +13,9 @@ export class Application {
   constructor (id: string) {
     this.id = id;
     this.node = document.getElementById (this.id);
+    this.main = new Main(this);
+    this.garage = new Garage(this, []);
+    this.winners = new Winners (this, []);
   }
 
   init (): void {

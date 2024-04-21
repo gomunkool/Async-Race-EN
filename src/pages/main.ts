@@ -8,8 +8,8 @@ export class Main {
   }
 
   init (): void {
-    const garageButton: HTMLElement = document.querySelector('.garage-button');
-    const winnersButton: HTMLElement = document.querySelector('.winners-button');
+    const garageButton: HTMLElement = document.querySelector('.garage-button')!;
+    const winnersButton: HTMLElement = document.querySelector('.winners-button')!;
 
     garageButton.addEventListener('click', (): void => {
       this.delete();
@@ -22,14 +22,18 @@ export class Main {
   }
 
   render (): void {
-    this.app.node.innerHTML = ` 
+    if (this.app.node && "innerHTML" in this.app.node) {
+      this.app.node.innerHTML = ` 
       <div class="main-start">
          <h2>Welcome to my app</h2>
       </div>`
+    }
     this.init ();
   }
 
   delete (): void {
-    this.app.node.innerHTML = '';
+    if (this.app.node && "innerHTML" in this.app.node) {
+      this.app.node.innerHTML = '';
+    }
   }
 }

@@ -5,12 +5,12 @@ import {Winner} from "../../components/winner/winner";
 
 export class Winners {
   app: Application;
-  nodeWinner: HTMLElement;
+  nodeWinner!: HTMLElement;
   data: CarDataType[];
   dataWinners: CarDataType[];
 
 
-  constructor (app: Application, data: CarDataType[], dataWinners: CarDataType[]) {
+  constructor (app: Application, data: CarDataType[], dataWinners: CarDataType[] = []) {
     this.app = app;
     this.data = data;
     this.dataWinners = dataWinners
@@ -29,7 +29,7 @@ export class Winners {
 
 
   async init () {
-    this.nodeWinner = document.querySelector ('.winner__car_count');
+    this.nodeWinner = document.querySelector ('.winner__car_count')!;
 
     try {
       const [winnersData, garageData] = await Promise.all ([
@@ -38,11 +38,16 @@ export class Winners {
       ]);
       this.dataWinners = winnersData;
       this.data = garageData;
-      this.dataWinners.map (car1 => {
-        const matchingObj = this.data.find (car2 => car2.id === car1.id);
-        car1.name = matchingObj.name
-        car1.color = matchingObj.color
-        return car1
+      this.dataWinners.map(car1 => {
+        const matchingObj = this.data.find(car2 => car2.id === car1.id);
+        if (matchingObj) {
+          car1.name = matchingObj.name;
+          car1.color = matchingObj.color;
+        } else {
+          car1.name = '';
+          car1.color = '';
+        }
+        return car1;
       });
 
     } catch (error) {
@@ -65,7 +70,8 @@ export class Winners {
 
 
   render (): void {
-    this.app.node.innerHTML = `
+    if (this.app.node && "innerHTML" in this.app.node) {
+      this.app.node.innerHTML = `
         <div class="main-winners">
             <h2 class="winners__title">Winners</h2>
             <div class="pagination_count">
@@ -88,10 +94,13 @@ export class Winners {
             </div>
 </div>
     `;
+    }
     this.init ();
   }
 
   delete (): void {
-    this.app.node.innerHTML = '';
+    if (this.app.node) {
+      this.app.node.innerHTML = '';
+    }
   }
 }
