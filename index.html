@@ -1,13 +1,25 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Async-race</title>
+</head>
+<body>
+<div id="app" class="app">
+    <header class="header">
+        <h1>Async-race</h1>
+        <div class='header__button-count'>
+            <button class="header__button garage-button">Garage</button>
+            <button class="header__button winners-button">Winners</button>
+        </div>
+    </header>
+    <main id="main" class="main"></main>
+    <footer class="footer">
+        <a>Vadzim Maroz</a>
+        <a>RS EN 2024</a>
+    </footer>
+</div>
+<script type="module" src="/src/index.ts"></script>
+</body>
 </html>
